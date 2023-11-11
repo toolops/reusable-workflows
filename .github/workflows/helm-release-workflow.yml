@@ -13,6 +13,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
+        
       - name: bump version
         id: bump
         uses: haya14busa/action-bumpr@v1
@@ -21,8 +22,9 @@ jobs:
 
       - name: bump chart version
         run: |
-          echo "CURRENT_HELM_CHART_VERSION=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')" >> $GITHUB_OUTPUT
-          echo current: ${chartVersion}; next: ${{ steps.bump.outputs.next_version }}
+          export chartVersion=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')
+          sed -i '/version:/ s/'${chartVersion}'/'${{ steps.bump.outputs.next_version }}'/' Chart.yaml
+          echo current: ${CURRENT_HELM_CHART_VERSION}; next: ${{ steps.bump.outputs.next_version }}
 
       - name: Package Helm chart
         run: helm package .
