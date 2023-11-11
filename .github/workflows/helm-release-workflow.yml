@@ -1,0 +1,31 @@
+name: Helm release
+
+on:
+  workflow_call:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  helm-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: bump version
+        id: bump
+        uses: haya14busa/action-bumpr@v1
+        with:
+          default_bump_level: patch
+
+      - name: bump chart version
+        run: |
+          echo "CURRENT_HELM_CHART_VERSION=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')" >> $GITHUB_OUTPUT
+          echo current: ${chartVersion}; next: ${{ steps.bump.outputs.next_version }}
+
+      - name: Package Helm chart
+        run: helm package .
+
+      - name: Push Helm chart
+        run: helm push shared-library-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
