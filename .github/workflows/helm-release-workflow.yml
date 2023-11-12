@@ -28,6 +28,8 @@ jobs:
         run: |
           export chartVersion=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')
           sed -i '/version:/ s/'${chartVersion}'/'${{ steps.bump.outputs.next_version }}'/' Chart.yaml
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git add Chart.yaml
           git commit -m "bump chart version"
           git push
