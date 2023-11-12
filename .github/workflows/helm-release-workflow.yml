@@ -6,9 +6,12 @@ on:
       chart_name:
         required: true
         type: string
+    secrets:
+      DO_API:
+        required: true
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: registry.digitalocean.com
 
 permissions:
   contents: write
@@ -54,8 +57,8 @@ jobs:
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DO_API }}
+          password: ${{ secrets.DO_API }}
 
       - name: Push Helm chart
         run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
