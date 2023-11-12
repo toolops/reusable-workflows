@@ -17,6 +17,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
+      - name: Prep git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
       - name: bump version
         id: bump
         uses: haya14busa/action-bumpr@v1
@@ -28,8 +33,9 @@ jobs:
         run: |
           export chartVersion=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')
           sed -i '/version:/ s/'${chartVersion}'/'${{ steps.bump.outputs.next_version }}'/' Chart.yaml
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+      
+      - name: commit bump
+        run: |
           git add Chart.yaml
           git commit -m "bump chart version"
           git push
