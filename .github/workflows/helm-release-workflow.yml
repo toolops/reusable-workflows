@@ -12,6 +12,8 @@ on:
 
 env:
   REGISTRY: registry.digitalocean.com
+  REGISTRY_NAMESPACE: ams3-pcr1
+
 
 permissions:
   contents: write
@@ -61,7 +63,7 @@ jobs:
           password: ${{ secrets.DO_API }}
 
       - name: Push Helm chart
-        run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
+        run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm
 
       - name: Creare release
         uses: softprops/action-gh-release@v1
