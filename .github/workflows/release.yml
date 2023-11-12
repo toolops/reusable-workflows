@@ -1,0 +1,26 @@
+name: Helm release
+
+on:
+  push:
+    branches: main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: bump version
+        id: bump
+        uses: haya14busa/action-bumpr@v1
+        with:
+          default_bump_level: patch
+          dry_run: true
+
+      - name: Creare release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          name: Release ${{ steps.bump.outputs.next_version }}
+          tag_name: ${{ steps.bump.outputs.next_version }}
