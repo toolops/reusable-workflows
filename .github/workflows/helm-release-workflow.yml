@@ -2,6 +2,10 @@ name: Helm release
 
 on:
   workflow_call:
+    inputs:
+      chart_name:
+        required: true
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -18,6 +22,7 @@ jobs:
         uses: haya14busa/action-bumpr@v1
         with:
           default_bump_level: patch
+          dry_run: true
 
       - name: bump chart version
         run: |
@@ -26,9 +31,6 @@ jobs:
           git add Chart.yaml
           git commit -m "bump chart version"
           git push
-
-      - name: Create release
-        uses: haya14busa/action-update-semver@v1
 
       - name: Package Helm chart
         run: helm package .
@@ -44,4 +46,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push Helm chart
-        run: helm push shared-library-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
+        run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
+
+      - name: Creare release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          name: Release ${{ steps.bump.outputs.next_version }}
+          tag_name: ${{ steps.bump.outputs.next_version }}
+          files: ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz
