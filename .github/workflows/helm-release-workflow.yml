@@ -11,8 +11,8 @@ on:
         required: true
 
 env:
-  REGISTRY: registry.digitalocean.com
-  REGISTRY_NAMESPACE: ams3-pcr1
+  REGISTRY: ghcr.io
+  REGISTRY_NAMESPACE: toolops
 
 
 permissions:
@@ -59,8 +59,8 @@ jobs:
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DO_API }}
-          password: ${{ secrets.DO_API }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push Helm chart
         run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm
