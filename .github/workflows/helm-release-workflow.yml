@@ -13,7 +13,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-        
       - name: bump version
         id: bump
         uses: haya14busa/action-bumpr@v1
@@ -29,4 +28,4 @@ jobs:
         run: helm package .
 
       - name: Push Helm chart
-        run: helm push shared-library-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository }}
+        run: helm push shared-library-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
