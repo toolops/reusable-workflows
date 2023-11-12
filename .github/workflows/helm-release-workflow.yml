@@ -24,7 +24,6 @@ jobs:
         run: |
           export chartVersion=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')
           sed -i '/version:/ s/'${chartVersion}'/'${{ steps.bump.outputs.next_version }}'/' Chart.yaml
-          cat Chart.yaml
 
       - name: Package Helm chart
         run: helm package .
