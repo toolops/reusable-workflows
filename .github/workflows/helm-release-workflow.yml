@@ -6,9 +6,6 @@ on:
       chart_name:
         required: true
         type: string
-    secrets:
-      DO_API:
-        required: true
 
 env:
   REGISTRY: ghcr.io
