@@ -1,4 +1,4 @@
-name: Helm release
+name: Reusable workflows release
 
 on:
   push:
