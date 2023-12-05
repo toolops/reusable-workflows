@@ -1,0 +1,50 @@
+name: Helm deploy
+
+on:
+  workflow_call:
+    inputs:
+      chart_name:
+        required: true
+        type: string
+      chart_version:
+        required: true
+        type: number
+      cluster_name:
+        required: true
+        type: string
+      namespace:
+        required: true
+        type: string
+    secrets:
+      DIGITALOCEAN_ACCESS_TOKEN:
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  REGISTRY_NAMESPACE: toolops
+
+jobs:
+  helm-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save testing-cluster
+
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Helm chart
+        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
+    

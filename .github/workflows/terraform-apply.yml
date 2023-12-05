@@ -1,0 +1,31 @@
+name: Terraform apply
+
+on:
+  workflow_call:
+    secrets:
+      TF_API_TOKEN:
+        required: true
+
+env:
+  TF_CLOUD_ORGANIZATION: ToolOps
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  TF_WORKSPACE: toolops-do
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login
+      run: terraform login 
+
+    - name: Init
+      run: terraform init
+
+    - name: Plan
+      run: terraform apply
