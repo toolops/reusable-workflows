@@ -18,6 +18,8 @@ permissions:
 jobs:
   helm-release:
     runs-on: ubuntu-latest
+    outputs:
+      released_version: ${{ steps.bump.outputs.next_version }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
