@@ -15,8 +15,11 @@ on:
       namespace:
         required: true
         type: string
+      additional_args:
+        required: false
+        type: string
     secrets:
-      DIGITALOCEAN_ACCESS_TOKEN:
+      DO_TOKEN:
         required: true
 
 env:
@@ -30,7 +33,7 @@ jobs:
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          token: ${{ secrets.DO_TOKEN }}
 
       - name: Save DigitalOcean kubeconfig
         run: doctl kubernetes cluster kubeconfig save testing-cluster
@@ -45,6 +48,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy Helm chart
+      - name: Deploy Helm chart without additional vars
+        if: ${{ inputs.additional_args == '' }}
         run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
+    
+      - name: Deploy Helm chart with additional vars
+        if: ${{ inputs.additional_args != '' }}
+        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{inputs.additional_args}} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
