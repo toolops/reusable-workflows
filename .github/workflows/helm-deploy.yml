@@ -4,19 +4,28 @@ on:
   workflow_call:
     inputs:
       chart_name:
+        description: "Name of the chart to deploy"
         required: true
         type: string
       chart_version:
+        description: "Version of the helm chart to deploy"
         required: true
         type: number
       cluster_name:
+        description: "name of the Kubernetes cluster to deploy to"
         required: true
         type: string
       namespace:
+        description: "Kubernetes namespace to deploy to"
         required: true
         type: string
       additional_args:
+        description: "Additional arguments to pass to the helm command"
         required: false
+        type: string
+      environment:
+        description: "Environment to run on"
+        required: true
         type: string
     secrets:
       DO_TOKEN:
@@ -28,6 +37,7 @@ env:
 
 jobs:
   helm-deploy:
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     steps:
       - name: Install doctl and login
