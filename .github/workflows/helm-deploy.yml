@@ -59,10 +59,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Helm chart without additional vars
-        if: ${{ inputs.additional_args == '' }}
+        if: inputs.additional_args == ''
         run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
       - name: Deploy Helm chart with additional vars
-        if: ${{ inputs.additional_args != '' }}
+        if: inputs.additional_args != ''
         run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{inputs.additional_args}} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
