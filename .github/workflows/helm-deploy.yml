@@ -30,7 +30,7 @@ jobs:
   helm-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Install doctl
+      - name: Install doctl and login
         uses: digitalocean/action-doctl@v2
         with:
           token: ${{ secrets.DO_TOKEN }}

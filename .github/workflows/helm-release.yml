@@ -4,8 +4,14 @@ on:
   workflow_call:
     inputs:
       chart_name:
+        description: "Name of the chart being build"
         required: true
         type: string
+      build_dependencies:
+        description: "Set to true if there are 3rd party dependencies"
+        required: false
+        type: boolean
+        default: false
 
 env:
   REGISTRY: ghcr.io
@@ -23,6 +29,20 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Helm dependencies
+        if: ${{ inputs.build_dependencies == true }}
+        run: |
+          helm dependency build
 
       - name: Prep git
         run: |
@@ -50,16 +70,6 @@ jobs:
 
       - name: Package Helm chart
         run: helm package .
-
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push Helm chart
         run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm
