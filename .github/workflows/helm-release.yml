@@ -12,6 +12,10 @@ on:
         required: false
         type: boolean
         default: false
+    outputs:
+      released_version:
+        description: "version released by this run"
+        value: ${{ jobs.helm-release.outputs.released_version }}
 
 env:
   REGISTRY: ghcr.io
@@ -52,7 +56,7 @@ jobs:
 
       - name: Bump version
         id: bump
-        uses: haya14busa/action-bumpr@v1
+        uses: ihulsbus/action-bumpr@master
         with:
           default_bump_level: patch
           dry_run: true
