@@ -10,7 +10,7 @@ on:
       chart_version:
         description: "Version of the helm chart to deploy"
         required: true
-        type: number
+        type: string
       cluster_name:
         description: "name of the Kubernetes cluster to deploy to"
         required: true
