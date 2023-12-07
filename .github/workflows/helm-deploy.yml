@@ -11,14 +11,6 @@ on:
         description: "Version of the helm chart to deploy"
         required: true
         type: string
-      cluster_name:
-        description: "name of the Kubernetes cluster to deploy to"
-        required: true
-        type: string
-      namespace:
-        description: "Kubernetes namespace to deploy to"
-        required: true
-        type: string
       additional_args:
         description: "Additional arguments to pass to the helm command"
         required: false
@@ -46,7 +38,7 @@ jobs:
           token: ${{ secrets.DO_TOKEN }}
 
       - name: Save DigitalOcean kubeconfig
-        run: doctl kubernetes cluster kubeconfig save testing-cluster
+        run: doctl kubernetes cluster kubeconfig save ${{ vars.cluster_name }}
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
@@ -60,9 +52,9 @@ jobs:
 
       - name: Deploy Helm chart without additional vars
         if: inputs.additional_args == ''
-        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
+        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
       - name: Deploy Helm chart with additional vars
         if: inputs.additional_args != ''
-        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ inputs.namespace }} ${{inputs.additional_args}} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
+        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} ${{inputs.additional_args}} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
