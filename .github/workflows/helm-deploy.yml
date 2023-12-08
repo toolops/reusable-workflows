@@ -11,10 +11,11 @@ on:
         description: "Version of the helm chart to deploy"
         required: true
         type: string
-      additional_args:
-        description: "Additional arguments to pass to the helm command"
+      rendering:
+        description: "if additional rendering is needed, set this to true. expects "
         required: false
-        type: string
+        type: boolean
+        default: false
       environment:
         description: "Environment to run on"
         required: true
@@ -50,11 +51,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy Helm chart without additional vars
-        if: inputs.additional_args == ''
+      - name: Deploy Helm chart without additional rendering
+        if: inputs.renderer_path == false
         run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
-    
-      - name: Deploy Helm chart with additional vars
-        if: inputs.additional_args != ''
-        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} ${{inputs.additional_args}} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
+
+      - name: Create renderer script
+        if: inputs.renderer_path == true
+        run: |
+          cat << EOF > ./renderer.sh
+          #!/bin/sh
+          envsubst <&0
+          EOF
+          chmod +x ./renderer.sh
+
+      - name: Deploy Helm chart with additional rendering
+        if: inputs.renderer_path == true
+        run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} --post-renderer ./renderer.sh ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
