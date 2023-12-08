@@ -56,7 +56,7 @@ jobs:
 
       - name: Bump version
         id: bump
-        uses: ihulsbus/action-bumpr@master
+        uses: haya14busa/action-bumpr@v1
         with:
           default_bump_level: patch
           dry_run: true
