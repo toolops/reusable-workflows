@@ -12,10 +12,15 @@ on:
         required: false
         type: boolean
         default: false
+      build_container:
+        description: "Set to true if there is a container that needs to be built"
+        required: false
+        type: boolean
+        default: false
     outputs:
       released_version:
         description: "version released by this run"
-        value: ${{ jobs.helm-release.outputs.released_version }}
+        value: ${{ jobs.generate_version.outputs.next_version }}
 
 env:
   REGISTRY: ghcr.io
@@ -26,13 +31,41 @@ permissions:
   packages: write
 
 jobs:
-  helm-release:
+  generate_version:
     runs-on: ubuntu-latest
     outputs:
-      released_version: ${{ steps.bump.outputs.next_version }}
+      next_version: ${{ steps.bump.outputs.next_version }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+      
+      - name: Bump version
+        id: bump
+        uses: haya14busa/action-bumpr@v1
+        with:
+          default_bump_level: patch
+          dry_run: true
+  
+  docker_build:
+    needs: [generate_version]
+    uses: ToolOps/reusable-workflows/.github/workflows/docker-release.yml@v0.0.33
+    if: inputs.build_container == true
+    with:
+      container_version: ${{ needs.generate_version.outputs.next_version }}
+    secrets: inherit
+  
+  helm_release:
+    needs: [generate_version, docker_build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Prep git
+        run: |
+          sudo chmod -R ugo+rwx .git
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
@@ -48,23 +81,16 @@ jobs:
         run: |
           helm dependency build
 
-      - name: Prep git
+      - name: Bump app version in Chart.yaml
+        if: inputs.build_container == true
         run: |
-          sudo chmod -R ugo+rwx .git
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          sed -i 's/\(appVersion: "\).*\("\)/\1${{ needs.generate_version.outputs.next_version }}\2/g' Chart.yaml
+          
 
-      - name: Bump version
-        id: bump
-        uses: haya14busa/action-bumpr@v1
-        with:
-          default_bump_level: patch
-          dry_run: true
-
-      - name: Bump chart version
+      - name: Bump chart version in Chart.yaml
         run: |
           export chartVersion=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')
-          sed -i '/version:/ s/'${chartVersion}'/'${{ steps.bump.outputs.next_version }}'/' Chart.yaml
+          sed -i '/version:/ s/'${chartVersion}'/'${{ needs.generate_version.outputs.next_version }}'/' Chart.yaml
       
       - name: Commit bump
         run: |
@@ -76,12 +102,12 @@ jobs:
         run: helm package .
 
       - name: Push Helm chart
-        run: helm push ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm
+        run: helm push ${{ inputs.chart_name }}-${{ needs.generate_version.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm
 
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-          name: Release ${{ steps.bump.outputs.next_version }}
-          tag_name: ${{ steps.bump.outputs.next_version }}
-          files: ${{ inputs.chart_name }}-${{ steps.bump.outputs.next_version }}.tgz
+          name: Release ${{ needs.generate_version.outputs.next_version }}
+          tag_name: ${{ needs.generate_version.outputs.next_version }}
+          files: ${{ inputs.chart_name }}-${{ needs.generate_version.outputs.next_version }}.tgz
