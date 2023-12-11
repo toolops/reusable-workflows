@@ -52,11 +52,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Helm chart without additional rendering
-        if: inputs.renderer_path == false
+        if: inputs.rendering == false
         run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
 
       - name: Create renderer script
-        if: inputs.renderer_path == true
+        if: inputs.rendering == true
         run: |
           cat << EOF > ./renderer.sh
           #!/bin/sh
@@ -65,6 +65,6 @@ jobs:
           chmod +x ./renderer.sh
 
       - name: Deploy Helm chart with additional rendering
-        if: inputs.renderer_path == true
+        if: inputs.rendering == true
         run: helm upgrade --install --atomic --timeout 5m --create-namespace --namespace ${{ vars.namespace }} --post-renderer ./renderer.sh ${{ inputs.chart_name }} oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm/${{ inputs.chart_name }} --version ${{ inputs.chart_version }}
     
