@@ -58,10 +58,8 @@ jobs:
       - name: Create renderer script
         if: inputs.rendering == true
         run: |
-          cat << EOF > ./renderer.sh
-          #!/bin/sh
-          envsubst <&0
-          EOF
+          echo '#!/bin/sh' > ./renderer.sh
+          echo 'envsubst <&0' >> ./renderer.sh
           chmod +x ./renderer.sh
 
       - name: Deploy Helm chart with additional rendering
