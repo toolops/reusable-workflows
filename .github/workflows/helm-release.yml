@@ -63,13 +63,14 @@ jobs:
     secrets: inherit
   
   helm_release:
-    needs: [generate_version, docker_build]
+    needs: [generate_version]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Prep git
+        if: github.event_name != 'pull_request'
         run: |
           sudo chmod -R ugo+rwx .git
           git config user.name 'github-actions[bot]'
@@ -99,8 +100,9 @@ jobs:
         run: |
           export chartVersion=$(cat Chart.yaml | grep '^version:' | awk '{ print $2 }')
           sed -i '/version:/ s/'${chartVersion}'/'${{ needs.generate_version.outputs.next_version }}'/' Chart.yaml
-      
+    
       - name: Commit bump
+        if: github.event_name != 'pull_request'
         run: |
           git add Chart.yaml
           git commit -m "bump chart version"
@@ -110,9 +112,11 @@ jobs:
         run: helm package .
 
       - name: Push Helm chart
+        if: github.event_name != 'pull_request'
         run: helm push ${{ inputs.chart_name }}-${{ needs.generate_version.outputs.next_version }}.tgz oci://${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/helm
 
       - name: Create release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
