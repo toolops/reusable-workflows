@@ -17,6 +17,11 @@ on:
         required: false
         type: boolean
         default: false
+      bump_level:
+        description: "semver level to bump. Can be: major, minor or patch"
+        required: false
+        type: string
+        default: patch
     outputs:
       released_version:
         description: "version released by this run"
@@ -35,17 +40,19 @@ jobs:
   generate_version:
     runs-on: ubuntu-latest
     outputs:
-      next_version: ${{ steps.bump.outputs.next_version }}
+      next_version: ${{ steps.bump.outputs.new_version }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
       
-      - name: Bump version
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+
+      - uses: actions-ecosystem/action-bump-semver@v1
         id: bump
-        uses: haya14busa/action-bumpr@v1
         with:
-          default_bump_level: patch
-          dry_run: true
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: ${{ inputs.bump_level }}
   
   docker_build:
     needs: [generate_version]
