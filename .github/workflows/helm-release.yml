@@ -58,7 +58,7 @@ jobs:
   docker_build:
     name: Build docker container
     needs: [generate_version]
-    uses: ToolOps/reusable-workflows/.github/workflows/docker-release.yml@v0.0.33
+    uses: ToolOps/reusable-workflows/.github/workflows/docker-release.yml@v0.0.41
     if: inputs.build_container == true
     with:
       container_version: ${{ needs.generate_version.outputs.next_version }}
