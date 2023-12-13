@@ -1,0 +1,51 @@
+name: Workflow dispatch
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to trigger"
+        required: true
+        type: string
+      repository_name:
+        description: "Repository of the workflow"
+        required: true
+        type: string
+      workflow_name:
+        description: "workflow to trigger"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Dispatch ${{ inputs.workflow_name }} in repo ${{ inputs.repository_name }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      REPO: ${{ inputs.repository_name }}
+      WORKFLOW: ${{ inputs.workflow_name }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Generate a token
+      id: generate_token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ vars.TOOLOPS_ACTIONS_APP_ID }}
+        private-key: ${{ secrets.TOOLOPS_ACTIONS_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+    - name: Trigger Kubernetes provisioning
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ steps.generate_token.outputs.token }}
+        script: |
+          github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: '${REPO}',
+            workflow_id: '${WORKFLOW}',
+            ref: 'main',
+            inputs: {
+              environment: '${ENVIRONMENT}'
+            }
+          })
