@@ -38,6 +38,7 @@ permissions:
 
 jobs:
   generate_version:
+    name: Generate new version number for this release
     runs-on: ubuntu-latest
     outputs:
       next_version: ${{ steps.bump.outputs.new_version }}
@@ -55,6 +56,7 @@ jobs:
           level: ${{ inputs.bump_level }}
   
   docker_build:
+    name: Build docker container
     needs: [generate_version]
     uses: ToolOps/reusable-workflows/.github/workflows/docker-release.yml@v0.0.33
     if: inputs.build_container == true
@@ -63,6 +65,7 @@ jobs:
     secrets: inherit
   
   helm_release:
+    name: Release Helm chart
     needs: [generate_version]
     runs-on: ubuntu-latest
     steps:
