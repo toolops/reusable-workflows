@@ -15,6 +15,7 @@ env:
 
 jobs:
   helm-lint:
+    name: Lint helm chart
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code

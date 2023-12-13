@@ -16,6 +16,7 @@ env:
 
 jobs:
   build:
+    name: Build docker container
     runs-on: ubuntu-latest
     permissions:
       contents: read
