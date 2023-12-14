@@ -42,4 +42,4 @@ jobs:
 
     - name: Terraform Apply
       id: apply
-      run: terraform apply -no-color -var "do_token=${{ secrets.DO_TOKEN }}"
+      run: terraform apply -auto-approve -input=false -no-color -var "do_token=${{ secrets.DO_TOKEN }}"
