@@ -120,7 +120,7 @@ jobs:
 
       - name: Create release
         if: github.event_name != 'pull_request'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           name: Release ${{ needs.generate_version.outputs.next_version }}
