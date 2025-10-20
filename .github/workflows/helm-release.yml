@@ -44,7 +44,7 @@ jobs:
       next_version: ${{ steps.bump.outputs.new_version }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - uses: actions-ecosystem/action-get-latest-tag@v1
         id: get-latest-tag
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Prep git
         if: github.event_name != 'pull_request'
